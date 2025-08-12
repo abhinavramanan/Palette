@@ -1,6 +1,7 @@
 class ColorPaletteGenerator {
     constructor() {
         this.currentPalette = [];
+        this.lockedColors = []; // Array to track locked colors
         this.savedPalettes = JSON.parse(localStorage.getItem('savedPalettes')) || [];
         this.init();
     }
@@ -38,23 +39,32 @@ class ColorPaletteGenerator {
         const harmonyType = document.getElementById('harmonyType').value;
         const baseHue = Math.floor(Math.random() * 360);
 
+        let newPalette;
         switch (harmonyType) {
             case 'analogous':
-                this.currentPalette = this.generateAnalogous(baseHue);
+                newPalette = this.generateAnalogous(baseHue);
                 break;
             case 'complementary':
-                this.currentPalette = this.generateComplementary(baseHue);
+                newPalette = this.generateComplementary(baseHue);
                 break;
             case 'triadic':
-                this.currentPalette = this.generateTriadic(baseHue);
+                newPalette = this.generateTriadic(baseHue);
                 break;
             case 'monochromatic':
-                this.currentPalette = this.generateMonochromatic(baseHue);
+                newPalette = this.generateMonochromatic(baseHue);
                 break;
             default:
-                this.currentPalette = this.generateRandom();
+                newPalette = this.generateRandom();
         }
 
+        // Preserve locked colors
+        for (let i = 0; i < newPalette.length; i++) {
+            if (this.lockedColors[i]) {
+                newPalette[i] = this.currentPalette[i];
+            }
+        }
+
+        this.currentPalette = newPalette;
         this.renderPalette();
     }
 
@@ -197,9 +207,14 @@ class ColorPaletteGenerator {
 
         const rgb = this.hexToRgb(color);
         const hsl = this.hexToHsl(color);
+        const isLocked = this.lockedColors[index];
 
         card.innerHTML = `
-            <div class="color-display" style="background-color: ${color}" onclick="copyToClipboard('${color}')"></div>
+            <div class="color-display" style="background-color: ${color}" onclick="copyToClipboard('${color}')">
+                <button class="lock-btn ${isLocked ? 'locked' : ''}" onclick="paletteGenerator.toggleLock(${index})" title="${isLocked ? 'Unlock color' : 'Lock color'}">
+                    ${isLocked ? '🔒' : '🔓'}
+                </button>
+            </div>
             <div class="color-info">
                 <div class="color-value">${color.toUpperCase()}</div>
                 <div class="color-formats">
@@ -266,9 +281,18 @@ class ColorPaletteGenerator {
         const palette = this.savedPalettes.find(p => p.id === id);
         if (palette) {
             this.currentPalette = [...palette.colors];
+            this.lockedColors = new Array(this.currentPalette.length).fill(false); // Reset locks
             this.renderPalette();
             this.showNotification('Palette loaded successfully!');
         }
+    }
+
+    toggleLock(index) {
+        this.lockedColors[index] = !this.lockedColors[index];
+        this.renderPalette();
+        this.showNotification(this.lockedColors[index] ? 
+            `Color ${index + 1} locked! 🔒` : 
+            `Color ${index + 1} unlocked! 🔓`);
     }
 
     deletePalette(id) {
