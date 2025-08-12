@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Color Palette Generator</h1>
+        <div class="controls">
+            <button id="generateBtn" class="btn primary">Generate New Palette</button>
+            <select id="harmonyType" class="select">
+                <option value="analogous">Analogous</option>
+                <option value="complementary">Complementary</option>
+                <option value="triadic">Triadic</option>
+                <option value="monochromatic">Monochromatic</option>
+                <option value="random">Random</option>
+            </select>
+        </div>
+    </header>
+
+    <main>
+        <div id="paletteContainer" class="palette-container">
+        </div>
+
+        <div class="actions">
+            <button id="savePaletteBtn" class="btn secondary">Save Palette</button>
+            <button id="exportBtn" class="btn secondary">Export</button>
+            <button id="accessibilityBtn" class="btn secondary">Check Accessibility</button>
+        </div>
+
+        <div id="exportModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Export Palette</h2>
+                <div class="export-options">
+                    <button class="export-btn" data-format="css">CSS Variables</button>
+                    <button class="export-btn" data-format="scss">SCSS Variables</button>
+                    <button class="export-btn" data-format="json">JSON</button>
+                    <button class="export-btn" data-format="adobe">Adobe ASE</button>
+                </div>
+                <textarea id="exportOutput" readonly></textarea>
+                <button id="copyExportBtn" class="btn primary">Copy to Clipboard</button>
+            </div>
+        </div>
+
+        <div id="accessibilityModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Accessibility Check</h2>
+                <div id="accessibilityResults"></div>
+            </div>
+        </div>
+
+        <div class="saved-palettes">
+            <h2>Saved Palettes</h2>
+            <div id="savedPalettesContainer" class="saved-container">
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
