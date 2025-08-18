@@ -3,45 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎨 Color Palette Generator - Create Stunning Color Combinations</title>
-    <meta name="description" content="Generate beautiful color palettes with AI-powered harmony algorithms. Export to CSS, SCSS, JSON and more.">
+    <title>Pantone Color Studio - Professional Color Palette Generator</title>
+    <meta name="description" content="Professional color palette generator inspired by Pantone. Create harmonious color combinations for design, branding, and creative projects.">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎨</text></svg>">
 </head>
 <body>
-    <!-- Background decoration -->
-    <div class="bg-decoration">
-        <div class="floating-shape shape-1"></div>
-        <div class="floating-shape shape-2"></div>
-        <div class="floating-shape shape-3"></div>
-        <div class="floating-shape shape-4"></div>
-        <div class="floating-shape shape-5"></div>
-    </div>
-
     <div class="container">
         <header>
-            <div class="header-glow"></div>
-            <h1>
-                <span class="title-icon">🎨</span>
-                <span class="title-text">Color Palette Generator</span>
-            </h1>
-            <p class="subtitle">Create stunning color combinations with AI-powered harmony algorithms</p>
-            <div class="controls">
-                <button id="generateBtn" class="btn primary">
-                    <span class="btn-icon">✨</span>
-                    <span class="btn-text">Generate New Palette</span>
-                </button>
-                <label for="harmonyType" class="visually-hidden">Select harmony type</label>
-                <select id="harmonyType" class="select">
-                    <option value="analogous">🌅 Analogous</option>
-                    <option value="complementary">⚡ Complementary</option>
-                    <option value="triadic">🔺 Triadic</option>
-                    <option value="monochromatic">🌙 Monochromatic</option>
-                    <option value="random">🎲 Random</option>
-                </select>
-            </div>
-            <div class="generation-counter">
-                <span id="generationCount">0</span> palettes generated
+            <div class="header-content">
+                <h1>
+                    <span class="title-icon">🎨</span>
+                    Pallete
+                </h1>
+                <p class="subtitle">Professional color palette generator for designers and creatives</p>
+
+                <div class="controls">
+                    <button id="generateBtn" class="btn primary">
+                        <span class="btn-icon">⟲</span>
+                        <span class="btn-text">Generate Palette</span>
+                    </button>
+
+                    <label for="harmonyType" class="visually-hidden">Select color harmony type</label>
+                    <select id="harmonyType" class="select">
+                        <option value="analogous">🌅 Analogous</option>
+                        <option value="complementary">⚡ Complementary</option>
+                        <option value="triadic">🔺 Triadic</option>
+                        <option value="monochromatic">🌙 Monochromatic</option>
+                        <option value="random">🎲 Random</option>
+                    </select>
+                </div>
+
+                <div class="generation-counter">
+                    <span id="generationCount">0</span> palettes generated
+                </div>
             </div>
         </header>
 
@@ -49,135 +44,37 @@
             <!-- Loading indicator -->
             <div id="loadingIndicator" class="loading-indicator">
                 <div class="loading-spinner"></div>
-                <span>Generating beautiful colors...</span>
+                <span>Generating color harmony...</span>
             </div>
 
-            <div id="paletteContainer" class="palette-container">
-                <!-- Color cards will be inserted here -->
-            </div>
+            <!-- Color Palette Display -->
+            <section class="palette-section">
+                <div id="paletteContainer" class="palette-container">
+                    <!-- Color cards will be inserted here -->
+                </div>
 
-            <div class="actions">
-                <button id="savePaletteBtn" class="btn secondary">
-                    <span class="btn-icon">💾</span>
-                    <span class="btn-text">Save Palette</span>
-                </button>
-                <button id="exportBtn" class="btn secondary">
-                    <span class="btn-icon">📤</span>
-                    <span class="btn-text">Export</span>
-                </button>
-                <button id="accessibilityBtn" class="btn secondary">
-                    <span class="btn-icon">♿</span>
-                    <span class="btn-text">Check Accessibility</span>
-                </button>
-            </div>
-
-            <!-- Quick Actions Floating Button -->
-            <div class="fab-container">
-                <button id="fabMain" class="fab">
-                    <span class="fab-icon">⚡</span>
-                </button>
-                <div class="fab-menu">
-                    <button class="fab-item" data-action="random-color">
-                        <span class="fab-icon">🎲</span>
-                        <span class="fab-tooltip">Random Color</span>
+                <div class="actions">
+                    <button id="savePaletteBtn" class="btn secondary">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">Save Palette</span>
                     </button>
-                    <button class="fab-item" data-action="copy-all">
-                        <span class="fab-icon">📋</span>
-                        <span class="fab-tooltip">Copy All</span>
+                    <button id="exportBtn" class="btn secondary">
+                        <span class="btn-icon">📤</span>
+                        <span class="btn-text">Export</span>
                     </button>
-                    <button class="fab-item" data-action="reset-locks">
-                        <span class="fab-icon">🔓</span>
-                        <span class="fab-tooltip">Unlock All</span>
+                    <button id="accessibilityBtn" class="btn secondary">
+                        <span class="btn-icon">♿</span>
+                        <span class="btn-text">Accessibility Check</span>
                     </button>
                 </div>
-            </div>
-
-            <!-- Export Modal -->
-            <div id="exportModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>
-                            <span class="modal-icon">📤</span>
-                            Export Palette
-                        </h2>
-                        <span class="close">&times;</span>
-                    </div>
-                    <div class="export-options">
-                        <button class="export-btn" data-format="css">
-                            <span class="export-icon">🎨</span>
-                            CSS Variables
-                        </button>
-                        <button class="export-btn" data-format="scss">
-                            <span class="export-icon">⚙️</span>
-                            SCSS Variables
-                        </button>
-                        <button class="export-btn" data-format="json">
-                            <span class="export-icon">📊</span>
-                            JSON
-                        </button>
-                        <button class="export-btn" data-format="adobe">
-                            <span class="export-icon">🎭</span>
-                            Adobe ASE
-                        </button>
-                    </div>
-                    <div class="export-preview">
-                        <label for="exportOutput">Preview:</label>
-                        <textarea id="exportOutput" readonly placeholder="Select an export format to see the output..."></textarea>
-                    </div>
-                    <div class="modal-actions">
-                        <button id="copyExportBtn" class="btn primary">
-                            <span class="btn-icon">📋</span>
-                            <span class="btn-text">Copy to Clipboard</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Accessibility Modal -->
-            <div id="accessibilityModal" class="modal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>
-                            <span class="modal-icon">♿</span>
-                            Accessibility Check
-                        </h2>
-                        <span class="close">&times;</span>
-                    </div>
-                    <div class="accessibility-summary">
-                        <div class="summary-card">
-                            <span class="summary-icon">✅</span>
-                            <div class="summary-content">
-                                <span class="summary-number" id="passCount">0</span>
-                                <span class="summary-label">Passed</span>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <span class="summary-icon">⚠️</span>
-                            <div class="summary-content">
-                                <span class="summary-number" id="warningCount">0</span>
-                                <span class="summary-label">Warnings</span>
-                            </div>
-                        </div>
-                        <div class="summary-card">
-                            <span class="summary-icon">❌</span>
-                            <div class="summary-content">
-                                <span class="summary-number" id="failCount">0</span>
-                                <span class="summary-label">Failed</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="accessibilityResults" class="accessibility-results">
-                        <!-- Results will be inserted here -->
-                    </div>
-                </div>
-            </div>
+            </section>
 
             <!-- Saved Palettes Section -->
-            <div class="saved-palettes">
+            <section class="saved-palettes">
                 <div class="section-header">
                     <h2>
-                        <span class="section-icon">💾</span>
-                        Saved Palettes
+                        <span class="section-icon">📁</span>
+                        Saved Color Palettes
                     </h2>
                     <button id="clearAllBtn" class="btn-clear">
                         <span class="btn-icon">🗑️</span>
@@ -188,11 +85,111 @@
                     <div class="empty-state">
                         <div class="empty-icon">🎨</div>
                         <h3>No saved palettes yet</h3>
-                        <p>Generate and save some beautiful palettes to see them here!</p>
+                        <p>Create and save color palettes to build your personal color library.</p>
                     </div>
                 </div>
-            </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Quick Actions Floating Button -->
+    <div class="fab-container">
+        <button id="fabMain" class="fab">
+            <span class="fab-icon">⚡</span>
+        </button>
+        <div class="fab-menu">
+            <button class="fab-item" data-action="random-color">
+                <span class="fab-icon">🎲</span>
+                <span class="fab-tooltip">Random Color</span>
+            </button>
+            <button class="fab-item" data-action="copy-all">
+                <span class="fab-icon">📋</span>
+                <span class="fab-tooltip">Copy All</span>
+            </button>
+            <button class="fab-item" data-action="reset-locks">
+                <span class="fab-icon">🔓</span>
+                <span class="fab-tooltip">Unlock All</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span class="modal-icon">📤</span>
+                    Export Color Palette
+                </h2>
+                <button class="close" aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="export-options">
+                <button class="export-btn" data-format="css">
+                    <span class="export-icon">🎨</span>
+                    CSS Variables
+                </button>
+                <button class="export-btn" data-format="scss">
+                    <span class="export-icon">⚙️</span>
+                    SCSS Variables
+                </button>
+                <button class="export-btn" data-format="json">
+                    <span class="export-icon">📊</span>
+                    JSON Format
+                </button>
+                <button class="export-btn" data-format="adobe">
+                    <span class="export-icon">🎭</span>
+                    Adobe ASE
+                </button>
+            </div>
+
+            <div class="export-preview">
+                <label for="exportOutput">Export Preview:</label>
+                <textarea id="exportOutput" readonly placeholder="Select an export format to preview the output..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button id="copyExportBtn" class="btn primary">
+                    <span class="btn-icon">📋</span>
+                    <span class="btn-text">Copy to Clipboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accessibility Modal -->
+    <div id="accessibilityModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span class="modal-icon">♿</span>
+                    WCAG Accessibility Analysis
+                </h2>
+                <button class="close" aria-label="Close modal">&times;</button>
+            </div>
+
+            <div class="accessibility-summary">
+                <div class="summary-card">
+                    <span class="summary-icon">✅</span>
+                    <span class="summary-number" id="passCount">0</span>
+                    <span class="summary-label">Passed</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-icon">⚠️</span>
+                    <span class="summary-number" id="warningCount">0</span>
+                    <span class="summary-label">Warnings</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-icon">❌</span>
+                    <span class="summary-number" id="failCount">0</span>
+                    <span class="summary-label">Failed</span>
+                </div>
+            </div>
+
+            <div id="accessibilityResults" class="accessibility-results">
+                <!-- Accessibility results will be inserted here -->
+            </div>
+        </div>
     </div>
 
     <!-- Toast Container -->
