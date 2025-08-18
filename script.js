@@ -3,6 +3,7 @@ class ColorPaletteGenerator {
         this.currentPalette = [];
         this.lockedColors = []; // Array to track locked colors
         this.savedPalettes = JSON.parse(localStorage.getItem('savedPalettes')) || [];
+        this.generationCount = parseInt(localStorage.getItem('generationCount')) || 0;
         this.init();
     }
 
@@ -10,6 +11,8 @@ class ColorPaletteGenerator {
         this.bindEvents();
         this.generatePalette();
         this.renderSavedPalettes();
+        this.updateGenerationCounter();
+        this.initFAB();
     }
 
     bindEvents() {
@@ -17,6 +20,12 @@ class ColorPaletteGenerator {
         document.getElementById('savePaletteBtn').addEventListener('click', () => this.savePalette());
         document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
         document.getElementById('accessibilityBtn').addEventListener('click', () => this.checkAccessibility());
+
+        // Clear all button
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', () => this.clearAllPalettes());
+        }
 
         document.querySelectorAll('.close').forEach(close => {
             close.addEventListener('click', (e) => this.closeModal(e.target.closest('.modal')));
@@ -33,39 +42,163 @@ class ColorPaletteGenerator {
                 this.closeModal(e.target);
             }
         });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && !e.target.matches('input, textarea, select')) {
+                e.preventDefault();
+                this.generatePalette();
+            }
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 's') {
+                    e.preventDefault();
+                    this.savePalette();
+                }
+                if (e.key === 'e') {
+                    e.preventDefault();
+                    this.showExportModal();
+                }
+            }
+        });
     }
 
     generatePalette() {
-        const harmonyType = document.getElementById('harmonyType').value;
-        const baseHue = Math.floor(Math.random() * 360);
+        this.showLoading();
 
-        let newPalette;
-        switch (harmonyType) {
-            case 'analogous':
-                newPalette = this.generateAnalogous(baseHue);
-                break;
-            case 'complementary':
-                newPalette = this.generateComplementary(baseHue);
-                break;
-            case 'triadic':
-                newPalette = this.generateTriadic(baseHue);
-                break;
-            case 'monochromatic':
-                newPalette = this.generateMonochromatic(baseHue);
-                break;
-            default:
-                newPalette = this.generateRandom();
-        }
+        // Simulate generation delay for better UX
+        setTimeout(() => {
+            const harmonyType = document.getElementById('harmonyType').value;
+            const baseHue = Math.floor(Math.random() * 360);
 
-        // Preserve locked colors
-        for (let i = 0; i < newPalette.length; i++) {
-            if (this.lockedColors[i]) {
-                newPalette[i] = this.currentPalette[i];
+            let newPalette;
+            switch (harmonyType) {
+                case 'analogous':
+                    newPalette = this.generateAnalogous(baseHue);
+                    break;
+                case 'complementary':
+                    newPalette = this.generateComplementary(baseHue);
+                    break;
+                case 'triadic':
+                    newPalette = this.generateTriadic(baseHue);
+                    break;
+                case 'monochromatic':
+                    newPalette = this.generateMonochromatic(baseHue);
+                    break;
+                default:
+                    newPalette = this.generateRandom();
             }
+
+            // Preserve locked colors
+            for (let i = 0; i < newPalette.length; i++) {
+                if (this.lockedColors[i]) {
+                    newPalette[i] = this.currentPalette[i];
+                }
+            }
+
+            this.currentPalette = newPalette;
+            this.generationCount++;
+            this.updateGenerationCounter();
+            localStorage.setItem('generationCount', this.generationCount.toString());
+
+            this.hideLoading();
+            this.renderPalette();
+            this.showToast('✨ New palette generated!', 'success');
+        }, 300);
+    }
+
+    showLoading() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const paletteContainer = document.getElementById('paletteContainer');
+        loadingIndicator.style.display = 'flex';
+        paletteContainer.style.opacity = '0.3';
+    }
+
+    hideLoading() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const paletteContainer = document.getElementById('paletteContainer');
+        loadingIndicator.style.display = 'none';
+        paletteContainer.style.opacity = '1';
+    }
+
+    updateGenerationCounter() {
+        const counter = document.getElementById('generationCount');
+        if (counter) {
+            counter.textContent = this.generationCount;
+        }
+    }
+
+    initFAB() {
+        const fabItems = document.querySelectorAll('.fab-item');
+        fabItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const action = item.dataset.action;
+                switch (action) {
+                    case 'random-color':
+                        this.replaceRandomColor();
+                        break;
+                    case 'copy-all':
+                        this.copyAllColors();
+                        break;
+                    case 'reset-locks':
+                        this.resetAllLocks();
+                        break;
+                }
+            });
+        });
+    }
+
+    replaceRandomColor() {
+        if (this.currentPalette.length === 0) return;
+
+        const unlockedIndices = this.currentPalette
+            .map((_, index) => this.lockedColors[index] ? null : index)
+            .filter(index => index !== null);
+
+        if (unlockedIndices.length === 0) {
+            this.showToast('🔒 All colors are locked!', 'warning');
+            return;
         }
 
-        this.currentPalette = newPalette;
+        const randomIndex = unlockedIndices[Math.floor(Math.random() * unlockedIndices.length)];
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 50 + Math.random() * 50;
+        const lightness = 30 + Math.random() * 50;
+
+        this.currentPalette[randomIndex] = this.hslToHex(hue, saturation, lightness);
         this.renderPalette();
+        this.showToast('🎲 Random color added!', 'success');
+    }
+
+    copyAllColors() {
+        if (this.currentPalette.length === 0) {
+            this.showToast('❌ No palette to copy!', 'error');
+            return;
+        }
+
+        const colorString = this.currentPalette.join(', ');
+        navigator.clipboard.writeText(colorString).then(() => {
+            this.showToast('📋 All colors copied!', 'success');
+        });
+    }
+
+    resetAllLocks() {
+        this.lockedColors = new Array(this.currentPalette.length).fill(false);
+        this.renderPalette();
+        this.showToast('🔓 All colors unlocked!', 'success');
+    }
+
+    clearAllPalettes() {
+        if (this.savedPalettes.length === 0) {
+            this.showToast('❌ No palettes to clear!', 'warning');
+            return;
+        }
+
+        if (confirm('Are you sure you want to delete all saved palettes? This action cannot be undone.')) {
+            this.savedPalettes = [];
+            localStorage.setItem('savedPalettes', JSON.stringify(this.savedPalettes));
+            this.renderSavedPalettes();
+            this.showToast('🗑️ All palettes cleared!', 'success');
+        }
     }
 
     generateAnalogous(baseHue) {
@@ -198,12 +331,21 @@ class ColorPaletteGenerator {
         this.currentPalette.forEach((color, index) => {
             const colorCard = this.createColorCard(color, index);
             container.appendChild(colorCard);
+
+            // Stagger the animation
+            setTimeout(() => {
+                colorCard.style.opacity = '1';
+                colorCard.style.transform = 'translateY(0)';
+            }, index * 100);
         });
     }
 
     createColorCard(color, index) {
         const card = document.createElement('div');
         card.className = 'color-card';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
 
         const rgb = this.hexToRgb(color);
         const hsl = this.hexToHsl(color);
@@ -234,46 +376,79 @@ class ColorPaletteGenerator {
     }
 
     savePalette() {
-        if (this.currentPalette.length === 0) return;
+        if (this.currentPalette.length === 0) {
+            this.showToast('❌ No palette to save!', 'error');
+            return;
+        }
 
         const palette = {
             id: Date.now(),
             colors: [...this.currentPalette],
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            harmonyType: document.getElementById('harmonyType').value
         };
 
         this.savedPalettes.unshift(palette);
         localStorage.setItem('savedPalettes', JSON.stringify(this.savedPalettes));
         this.renderSavedPalettes();
-        this.showNotification('Palette saved successfully!');
+        this.showToast('💾 Palette saved successfully!', 'success');
     }
 
     renderSavedPalettes() {
         const container = document.getElementById('savedPalettesContainer');
-        container.innerHTML = '';
 
         if (this.savedPalettes.length === 0) {
-            container.innerHTML = '<p>No saved palettes yet. Generate and save some palettes!</p>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🎨</div>
+                    <h3>No saved palettes yet</h3>
+                    <p>Generate and save some beautiful palettes to see them here!</p>
+                </div>
+            `;
             return;
         }
 
-        this.savedPalettes.forEach(palette => {
+        container.innerHTML = '';
+        this.savedPalettes.forEach((palette, index) => {
             const paletteElement = document.createElement('div');
             paletteElement.className = 'saved-palette';
+            paletteElement.style.opacity = '0';
+            paletteElement.style.transform = 'translateY(20px)';
+            paletteElement.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
 
             const colorsHtml = palette.colors.map(color =>
                 `<div class="saved-color" style="background-color: ${color}" onclick="copyToClipboard('${color}')" title="${color}"></div>`
             ).join('');
 
+            const date = new Date(palette.timestamp).toLocaleDateString();
+
             paletteElement.innerHTML = `
-                <div class="saved-colors">${colorsHtml}</div>
+                <div class="saved-info">
+                    <div class="saved-colors">${colorsHtml}</div>
+                    <div class="saved-meta">
+                        <small class="saved-date">${date}</small>
+                        <small class="saved-type">${palette.harmonyType || 'Custom'}</small>
+                    </div>
+                </div>
                 <div class="saved-actions">
-                    <button class="btn secondary" onclick="paletteGenerator.loadPalette(${palette.id})">Load</button>
-                    <button class="btn secondary" onclick="paletteGenerator.deletePalette(${palette.id})">Delete</button>
+                    <button class="btn secondary" onclick="paletteGenerator.loadPalette(${palette.id})">
+                        <span class="btn-icon">📥</span>
+                        <span class="btn-text">Load</span>
+                    </button>
+                    <button class="btn secondary" onclick="paletteGenerator.deletePalette(${palette.id})">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">Delete</span>
+                    </button>
                 </div>
             `;
 
             container.appendChild(paletteElement);
+
+            // Stagger animation
+            setTimeout(() => {
+                paletteElement.style.opacity = '1';
+                paletteElement.style.transform = 'translateY(0)';
+            }, index * 100);
         });
     }
 
@@ -281,113 +456,33 @@ class ColorPaletteGenerator {
         const palette = this.savedPalettes.find(p => p.id === id);
         if (palette) {
             this.currentPalette = [...palette.colors];
-            this.lockedColors = new Array(this.currentPalette.length).fill(false); // Reset locks
+            this.lockedColors = new Array(this.currentPalette.length).fill(false);
+
+            // Update harmony type if available
+            if (palette.harmonyType) {
+                document.getElementById('harmonyType').value = palette.harmonyType;
+            }
+
             this.renderPalette();
-            this.showNotification('Palette loaded successfully!');
+            this.showToast('📥 Palette loaded successfully!', 'success');
         }
     }
 
     toggleLock(index) {
         this.lockedColors[index] = !this.lockedColors[index];
         this.renderPalette();
-        this.showNotification(this.lockedColors[index] ? 
-            `Color ${index + 1} locked! 🔒` : 
-            `Color ${index + 1} unlocked! 🔓`);
+        this.showToast(this.lockedColors[index] ?
+            `🔒 Color ${index + 1} locked!` :
+            `🔓 Color ${index + 1} unlocked!`, 'success');
     }
 
     deletePalette(id) {
-        this.savedPalettes = this.savedPalettes.filter(p => p.id !== id);
-        localStorage.setItem('savedPalettes', JSON.stringify(this.savedPalettes));
-        this.renderSavedPalettes();
-        this.showNotification('Palette deleted successfully!');
-    }
-
-    showExportModal() {
-        if (this.currentPalette.length === 0) {
-            this.showNotification('Generate a palette first!');
-            return;
+        if (confirm('Are you sure you want to delete this palette?')) {
+            this.savedPalettes = this.savedPalettes.filter(p => p.id !== id);
+            localStorage.setItem('savedPalettes', JSON.stringify(this.savedPalettes));
+            this.renderSavedPalettes();
+            this.showToast('🗑️ Palette deleted successfully!', 'success');
         }
-        document.getElementById('exportModal').style.display = 'block';
-    }
-
-    exportPalette(format) {
-        const output = document.getElementById('exportOutput');
-
-        switch (format) {
-            case 'css':
-                output.value = this.exportCSS();
-                break;
-            case 'scss':
-                output.value = this.exportSCSS();
-                break;
-            case 'json':
-                output.value = this.exportJSON();
-                break;
-            case 'adobe':
-                output.value = this.exportAdobe();
-                break;
-        }
-    }
-
-    exportCSS() {
-        let css = ':root {\n';
-        this.currentPalette.forEach((color, index) => {
-            css += `  --color-${index + 1}: ${color};\n`;
-        });
-        css += '}';
-        return css;
-    }
-
-    exportSCSS() {
-        let scss = '';
-        this.currentPalette.forEach((color, index) => {
-            scss += `$color-${index + 1}: ${color};\n`;
-        });
-        return scss;
-    }
-
-    exportJSON() {
-        return JSON.stringify({
-            palette: this.currentPalette,
-            timestamp: new Date().toISOString()
-        }, null, 2);
-    }
-
-    exportAdobe() {
-        let ase = 'Adobe Swatch Exchange Format\n';
-        ase += 'Colors:\n';
-        this.currentPalette.forEach((color, index) => {
-            const rgb = this.hexToRgb(color);
-            ase += `Color ${index + 1}: RGB(${rgb.r}, ${rgb.g}, ${rgb.b}) - ${color}\n`;
-        });
-        return ase;
-    }
-
-    copyToClipboard() {
-        const output = document.getElementById('exportOutput');
-        output.select();
-        document.execCommand('copy');
-        this.showNotification('Copied to clipboard!');
-    }
-
-    checkAccessibility() {
-        if (this.currentPalette.length === 0) {
-            this.showNotification('Generate a palette first!');
-            return;
-        }
-
-        const results = document.getElementById('accessibilityResults');
-        results.innerHTML = '';
-
-        for (let i = 0; i < this.currentPalette.length; i++) {
-            for (let j = i + 1; j < this.currentPalette.length; j++) {
-                const contrast = this.calculateContrast(this.currentPalette[i], this.currentPalette[j]);
-                const result = this.getContrastResult(this.currentPalette[i], this.currentPalette[j], contrast);
-                results.appendChild(result);
-            }
-        }
-
-        document.getElementById('accessibilityModal').style.display = 'block';
     }
 
     calculateContrast(color1, color2) {
@@ -454,6 +549,120 @@ class ColorPaletteGenerator {
         return result;
     }
 
+    showExportModal() {
+        if (this.currentPalette.length === 0) {
+            this.showToast('❌ Generate a palette first!', 'error');
+            return;
+        }
+        document.getElementById('exportModal').style.display = 'block';
+    }
+
+    exportPalette(format) {
+        const output = document.getElementById('exportOutput');
+
+        switch (format) {
+            case 'css':
+                output.value = this.exportCSS();
+                break;
+            case 'scss':
+                output.value = this.exportSCSS();
+                break;
+            case 'json':
+                output.value = this.exportJSON();
+                break;
+            case 'adobe':
+                output.value = this.exportAdobe();
+                break;
+        }
+    }
+
+    exportCSS() {
+        let css = ':root {\n';
+        this.currentPalette.forEach((color, index) => {
+            css += `  --color-${index + 1}: ${color};\n`;
+        });
+        css += '}';
+        return css;
+    }
+
+    exportSCSS() {
+        let scss = '';
+        this.currentPalette.forEach((color, index) => {
+            scss += `$color-${index + 1}: ${color};\n`;
+        });
+        return scss;
+    }
+
+    exportJSON() {
+        return JSON.stringify({
+            palette: this.currentPalette,
+            harmonyType: document.getElementById('harmonyType').value,
+            timestamp: new Date().toISOString(),
+            generationCount: this.generationCount
+        }, null, 2);
+    }
+
+    exportAdobe() {
+        let ase = 'Adobe Swatch Exchange Format\n';
+        ase += `Generated: ${new Date().toLocaleString()}\n`;
+        ase += `Harmony Type: ${document.getElementById('harmonyType').value}\n\n`;
+        ase += 'Colors:\n';
+        this.currentPalette.forEach((color, index) => {
+            const rgb = this.hexToRgb(color);
+            ase += `Color ${index + 1}: RGB(${rgb.r}, ${rgb.g}, ${rgb.b}) - ${color}\n`;
+        });
+        return ase;
+    }
+
+    copyToClipboard() {
+        const output = document.getElementById('exportOutput');
+        if (!output.value) {
+            this.showToast('❌ Nothing to copy! Select an export format first.', 'error');
+            return;
+        }
+
+        output.select();
+        navigator.clipboard.writeText(output.value).then(() => {
+            this.showToast('📋 Export data copied to clipboard!', 'success');
+        }).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            this.showToast('📋 Export data copied to clipboard!', 'success');
+        });
+    }
+
+    checkAccessibility() {
+        if (this.currentPalette.length === 0) {
+            this.showToast('❌ Generate a palette first!', 'error');
+            return;
+        }
+
+        const results = document.getElementById('accessibilityResults');
+        results.innerHTML = '';
+
+        let passCount = 0, warningCount = 0, failCount = 0;
+
+        for (let i = 0; i < this.currentPalette.length; i++) {
+            for (let j = i + 1; j < this.currentPalette.length; j++) {
+                const contrast = this.calculateContrast(this.currentPalette[i], this.currentPalette[j]);
+                const result = this.getContrastResult(this.currentPalette[i], this.currentPalette[j], contrast);
+                results.appendChild(result);
+
+                if (contrast >= 4.5) passCount++;
+                else if (contrast >= 3) warningCount++;
+                else failCount++;
+            }
+        }
+
+        // Update summary
+        document.getElementById('passCount').textContent = passCount;
+        document.getElementById('warningCount').textContent = warningCount;
+        document.getElementById('failCount').textContent = failCount;
+
+        document.getElementById('accessibilityModal').style.display = 'block';
+        this.showToast('♿ Accessibility check completed!', 'info');
+    }
+
     closeModal(modal) {
         modal.style.display = 'none';
     }
@@ -468,11 +677,49 @@ class ColorPaletteGenerator {
             document.body.removeChild(notification);
         }, 3000);
     }
+
+    showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        toast.innerHTML = `
+            <span class="toast-icon">${icons[type] || icons.info}</span>
+            <span class="toast-message">${message}</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        `;
+
+        container.appendChild(toast);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.style.animation = 'toastSlideOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
+    }
 }
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        paletteGenerator.showNotification(`Copied ${text} to clipboard!`);
+        paletteGenerator.showToast(`📋 Copied ${text}!`, 'success');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        paletteGenerator.showToast(`📋 Copied ${text}!`, 'success');
     });
 }
 
